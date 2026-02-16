@@ -1,6 +1,107 @@
 'use strict';
 
 (() => {
+  // ============================================================
+  // MODO INVISÍVEL (anti-clone / anti-scrape / anti-inspection)
+  // ============================================================
+
+  // 1) Anti-iframe (camada extra além dos headers)
+  try {
+    if (window.top !== window.self) {
+      document.documentElement.style.display = 'none';
+      // tenta "quebrar" o frame (nem sempre permitido)
+      try { window.top.location = window.location.href; } catch (_) {}
+      return;
+    }
+  } catch (_) {}
+
+  // 2) Bloqueios “best-effort” de copiar/salvar/ver fonte/print
+  const blockKeys = (e) => {
+    const k = (e.key || '').toLowerCase();
+
+    // Bloqueia atalhos comuns de cópia/inspeção
+    const ctrl = e.ctrlKey || e.metaKey; // Windows/Linux: ctrl, Mac: meta
+    if (ctrl && (k === 's' || k === 'u' || k === 'c' || k === 'p' || k === 'a')) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // DevTools e combos comuns
+    if (k === 'f12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    if (e.shiftKey && ctrl && (k === 'i' || k === 'j' || k === 'c')) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    return true;
+  };
+
+  document.addEventListener('keydown', blockKeys, true);
+
+  // 3) Bloqueia menu de contexto e seleção (anti-scrape simples)
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  }, true);
+
+  document.addEventListener('selectstart', (e) => {
+    // permite seleção em inputs se você usar no futuro
+    const t = e.target;
+    const isInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA');
+    if (!isInput) e.preventDefault();
+  }, true);
+
+  // 4) Anti DevTools (best-effort): se detectar, entra em “blackout”
+  let devtoolsTripped = false;
+
+  const blackout = () => {
+    if (devtoolsTripped) return;
+    devtoolsTripped = true;
+
+    // Congela interações e “apaga” UI
+    document.documentElement.style.filter = 'blur(10px) brightness(0.2)';
+    document.documentElement.style.pointerEvents = 'none';
+
+    // Mensagem minimalista (sem innerHTML)
+    const msg = document.createElement('div');
+    msg.style.position = 'fixed';
+    msg.style.inset = '0';
+    msg.style.display = 'flex';
+    msg.style.alignItems = 'center';
+    msg.style.justifyContent = 'center';
+    msg.style.fontFamily = 'monospace';
+    msg.style.fontSize = '18px';
+    msg.style.color = '#ff4444';
+    msg.style.background = 'rgba(0,0,0,0.95)';
+    msg.style.zIndex = '2147483647';
+    msg.textContent = 'ACESSO RESTRITO';
+    document.body.appendChild(msg);
+  };
+
+  const devtoolsCheck = () => {
+    // Heurística comum: diferença de tamanho quando DevTools abre “docked”
+    const threshold = 160;
+    const w = Math.abs(window.outerWidth - window.innerWidth);
+    const h = Math.abs(window.outerHeight - window.innerHeight);
+    if (w > threshold || h > threshold) blackout();
+  };
+
+  window.setInterval(devtoolsCheck, 900);
+
+  // 5) Reduz scraping/recording: pausa animações quando a aba perde foco
+  document.addEventListener('visibilitychange', () => {
+    // Se escondido, “congela” atualizações do app (abaixo a gente respeita emergency/flags)
+    // Não faz nada aqui — só usa a flag no loop do app.
+  });
+
+  // ============================================================
+  // APP (seu código original, com segurança DOM-only)
+  // ============================================================
+
   /** DOM helpers **/
   const $ = (id) => document.getElementById(id);
 
@@ -20,7 +121,6 @@
       const a = rand(256), b = rand(256), c = rand(256), d = rand(256);
       const ip = `${a}.${b}.${c}.${d}`;
 
-      // Evita ranges privados e loopback
       if (a === 10) continue;
       if (a === 127) continue;
       if (a === 192 && b === 168) continue;
@@ -31,7 +131,6 @@
   }
 
   function token(len = 16) {
-    // Token de “integridade” (visual), sem prometer criptografia real
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let out = '';
     for (let i = 0; i < len; i++) out += chars[rand(chars.length)];
@@ -196,7 +295,6 @@
     const modal = $('threatsModal');
     const list = $('threatsList');
 
-    // Limpeza segura
     list.replaceChildren();
 
     if (threats.length === 0) {
@@ -245,7 +343,6 @@
       s.style.pointerEvents = 'none';
     });
 
-    // “desbloqueio” simples (demo). Sem prometer segurança real.
     const code = window.prompt('Digite o código de desbloqueio (demo: 2024):');
     if (code === '2024') {
       emergency = false;
@@ -273,15 +370,17 @@
   }
 
   /** Init **/
-  setText($('initialTime'), new Date().toLocaleString('pt-BR'));
+  const initialTime = $('initialTime');
+  if (initialTime) setText(initialTime, new Date().toLocaleString('pt-BR'));
 
   addLog('Sistema inicializado');
   addLog('Políticas ativas: CSP forte (sem inline)');
   addLog('Monitoramento carregado com sucesso');
 
-  // Integridade visual (não é “anti-tamper” real, mas sem enganar)
+  // Integridade visual
   window.setInterval(() => {
-    setText($('tamperCheck'), `INTEGRIDADE: OK · ${token(10)}`);
+    const tc = $('tamperCheck');
+    if (tc) setText(tc, `INTEGRIDADE: OK · ${token(10)}`);
   }, 2500);
 
   // Modal
@@ -299,9 +398,10 @@
     clickOrEnterSpace(sw, () => toggleSwitch(sw));
   });
 
-  // Simulação de ameaças
+  // Simulação de ameaças (pausa se a aba não estiver visível)
   window.setInterval(() => {
     if (emergency) return;
+    if (document.hidden) return;
 
     scansCount++;
     setText($('scansCount'), scansCount);
@@ -319,3 +419,4 @@
     }
   }, 3500);
 })();
+
