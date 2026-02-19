@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sentinela Mobile - Proteção Anti-Hacker</title>
+  <title>ORION SEGURANÇA</title>
 
-  <!-- Políticas que funcionam em estático (GitHub Pages) -->
   <meta name="referrer" content="no-referrer" />
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()" />
 
-  <!-- CSP FORTE (sem inline JS/CSS) -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     base-uri 'none';
@@ -21,126 +19,77 @@
     style-src 'self';
     script-src 'self';
     connect-src 'self';
-    upgrade-insecure-requests;
-    block-all-mixed-content;
   " />
 
   <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-  <div class="security-level" aria-hidden="true">
-    <div class="security-dot"></div>
-    NÍVEL: REFORÇADO
+
+  <div class="top-bar">
+    <div class="logo">
+      🛡️ ORION SEGURANÇA
+    </div>
+    <div class="status">
+      ● SISTEMA OPERACIONAL
+    </div>
   </div>
 
   <div class="container">
-    <div class="header">
-      <div class="shield" aria-hidden="true">🛡️</div>
-      <h1>Sentinela Mobile</h1>
-      <span class="status-badge" id="statusBadge">● SISTEMA PROTEGIDO</span>
-    </div>
 
-    <div class="monitor-panel">
-      <div class="live-indicator" aria-hidden="true">
-        <div class="live-dot"></div>
-        MONITORAMENTO ATIVO
+    <div class="card main-card">
+      <h2>Central de Monitoramento</h2>
+
+      <div class="counter">
+        <div class="number" id="threatCount">0</div>
+        <div class="label">AMEAÇAS BLOQUEADAS</div>
       </div>
 
-      <div class="threat-counter" id="threatCounter" role="button" tabindex="0" aria-label="Ver histórico de ameaças">
-        <div class="threat-number" id="threatCount">0</div>
-        <div class="threat-label">AMEAÇAS BLOQUEADAS</div>
-        <div class="click-hint">[ CLIQUE PARA DETALHES ]</div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
+      <div class="stats">
+        <div class="stat-box">
           <div class="stat-value" id="blockedIPs">0</div>
           <div class="stat-label">IPs Bloqueados</div>
         </div>
-        <div class="stat-card">
+
+        <div class="stat-box">
           <div class="stat-value" id="scansCount">0</div>
           <div class="stat-label">Verificações</div>
         </div>
       </div>
     </div>
 
-    <div class="protection-panel">
-      <div class="panel-title">🛡️ Proteções Ativas</div>
+    <div class="card">
+      <h2>Serviços Ativos</h2>
 
-      <div class="protection-item">
-        <div class="protection-info">
-          <h3>Firewall Avançado</h3>
-          <p>Bloqueia conexões suspeitas automaticamente</p>
-        </div>
-        <div class="switch active" data-protection="Firewall" role="switch" aria-checked="true" tabindex="0"></div>
+      <div class="service">
+        <span>Firewall Corporativo</span>
+        <span class="badge active">ATIVO</span>
       </div>
 
-      <div class="protection-item">
-        <div class="protection-info">
-          <h3>Detecção de Intrusão</h3>
-          <p>Monitora tentativas de acesso não autorizado</p>
-        </div>
-        <div class="switch active" data-protection="Detecção de Intrusão" role="switch" aria-checked="true" tabindex="0"></div>
+      <div class="service">
+        <span>Monitoramento de Intrusão</span>
+        <span class="badge active">ATIVO</span>
       </div>
 
-      <div class="protection-item">
-        <div class="protection-info">
-          <h3>Anti-Keylogger</h3>
-          <p>Protege contra captura de teclas</p>
-        </div>
-        <div class="switch active" data-protection="Anti-Keylogger" role="switch" aria-checked="true" tabindex="0"></div>
+      <div class="service">
+        <span>Proteção Anti-Malware</span>
+        <span class="badge active">ATIVO</span>
       </div>
 
-      <div class="protection-item">
-        <div class="protection-info">
-          <h3>Modo Furtivo</h3>
-          <p>Oculta o dispositivo na rede</p>
-        </div>
-        <div class="switch" data-protection="Modo Furtivo" role="switch" aria-checked="false" tabindex="0"></div>
+      <div class="service">
+        <span>Modo Discreto de Rede</span>
+        <span class="badge inactive">INATIVO</span>
       </div>
     </div>
 
-    <div class="log-panel">
-      <div class="panel-title">📋 Log de Segurança</div>
-      <div id="activityLog">
-        <div class="log-item">
-          <div class="log-time" id="initialTime"></div>
-          <div class="log-message">Sistema de proteção inicializado</div>
-          <div class="log-status">Status: Ativo</div>
-        </div>
+    <div class="card">
+      <h2>Log do Sistema</h2>
+
+      <div class="log">
+        Sistema iniciado com sucesso.
       </div>
     </div>
-  </div>
 
-  <button class="panic-btn" id="panicBtn" type="button" title="Botão de Pânico" aria-label="Ativar modo de emergência">🚨</button>
-
-  <div class="tamper-check" id="tamperCheck" aria-hidden="true">INTEGRIDADE: OK</div>
-
-  <div class="modal-overlay" id="threatsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">🛡️ HISTÓRICO DE AMEAÇAS</div>
-      <button class="close-btn" id="closeModalBtn" type="button" aria-label="Fechar">×</button>
-    </div>
-
-    <div class="modal-content">
-      <div class="summary-cards">
-        <div class="summary-card">
-          <div class="summary-value" id="totalThreats">0</div>
-          <div class="summary-label">Total</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value warn" id="todayThreats">0</div>
-          <div class="summary-label">Hoje</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-value ok">100%</div>
-          <div class="summary-label">Bloqueado</div>
-        </div>
-      </div>
-
-      <div id="threatsList"></div>
-    </div>
   </div>
 
   <script src="./app.js" defer></script>
