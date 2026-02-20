@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: orion
+      POSTGRES_USER: orion
+      POSTGRES_PASSWORD: orion
+    ports: ["5432:5432"]
+    volumes: ["orion_pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U orion -d orion"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    environment:
+      ENV: dev
+      DATABASE_URL: postgresql+psycopg://orion:orion@db:5432/orion
+      JWT_SECRET: CHANGE_ME_DEV_SECRET
+      ACCESS_TTL_MIN: 120
+      RATE_LIMIT_PER_MINUTE: 120
+      RATE_LIMIT_BURST: 60
+      CORS_ORIGINS: http://localhost:8080
+    ports: ["8000:8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@orion.local
+      PGADMIN_DEFAULT_PASSWORD: admin123!
+    ports: ["5050:80"]
+    depends_on: ["db"]
+
+volumes:
+  orion_pgdata:
