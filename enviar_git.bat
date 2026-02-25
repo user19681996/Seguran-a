@@ -2,26 +2,27 @@
 title ORION GIT UPLOAD
 color 0a
 
-echo ========================================
-echo   ENVIANDO ORION PARA O GITHUB
-echo ========================================
-echo.
-
 cd /d %~dp0
 
-echo Status atual:
-git status
+echo ========================================
+echo   ORION - SUBIR PARA O GITHUB
+echo ========================================
 echo.
 
-echo Adicionando arquivos...
+git status
+
 git add .
 
-echo.
-echo Criando commit...
-git commit -m "Update ORION Platform"
+git diff --cached --quiet
+if %errorlevel%==0 (
+  echo.
+  echo Nenhuma mudanca para commit.
+  echo.
+  pause
+  exit /b 0
+)
 
-echo.
-echo Enviando para GitHub...
+git commit -m "Update ORION Platform"
 git push
 
 echo.
